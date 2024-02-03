@@ -1,0 +1,28 @@
+[
+    {
+        "Agg": {
+            "open": 174.03,
+            "high": 174.88,
+            "low": 171.94,
+            "close": 174.31,
+            "volume": 78251328.0,
+            "vwap": 173.4143,
+            "timestamp": 1648785600000,
+            "transactions": 661160,
+            "otc": null
+        }
+    },
+    {
+        "Agg": {
+            "open": 174.57,
+            "high": 178.49,
+            "low": 174.44,
+            "close": 178.44,
+            "volume": 76545983.0,
+            "vwap": 177.4855,
+            "timestamp": 1649044800000,
+            "transactions": 630374,
+            "otc": null
+        }
+    }
+]

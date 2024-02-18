@@ -8,7 +8,13 @@ authors = [{ name = "Nikola Neykov", email = "nikola.neykov@gmail.com" }]
 description = "Accessing financial data using REST API"
 version = "0.0.2"
 requires-python = ">=3.8"
-dependencies = ["urllib3", "polygon", "pandas", "seaborn", "matplotlib"]
+dependencies = [
+    "urllib3",
+    "polygon-api-client",
+    "pandas",
+    "seaborn",
+    "matplotlib",
+]
 
 [project.urls]
 Repository = "https://github.com/npneykov/financial-data-api"

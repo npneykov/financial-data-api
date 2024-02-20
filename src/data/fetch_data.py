@@ -1,41 +1,64 @@
 import json
-import os
 from typing import cast
 
+import requests
 from polygon import RESTClient
 from polygon.rest import models
 from urllib3 import HTTPResponse
 
+from src.data.settings import (
+    AGG_FILE_PATH,
+    EXCH_FILE_PATH,
+    FROM_DATE,
+    MULTIPLIER,
+    POLYGON_API_KEY,
+    POLYGON_API_URL,
+    TICKER,
+    TIMESPAN,
+    TO_DATE,
+)
 
-polygon_api_key = 'sTGhTWuYpxCePcrjAfY1N0mnouaLRyOW'
-file_path = os.path.abspath('src/data/data.json')
-ticker = 'AAPL'
-multiplier = 1
-timespan = 'day'
-from_date = '2022-04-01'
-to_date = '2022-04-04'
+client = RESTClient(api_key=POLYGON_API_KEY, trace=True)
 
 
 class CustomJSONEncoder(json.JSONEncoder):
     def default(self, o):
-        return {ticker.format(o.__class__.__name__): o.__dict__}
+        return {TICKER.format(o.__class__.__name__): o.__dict__}
 
 
-def get_aggregates(client: RESTClient):
-    return cast(
-        HTTPResponse,
-        client.get_aggs(ticker, multiplier, timespan, from_date, to_date, raw=False),
-    )
+class GetData:
+    def __init__(self):
+        pass
 
+    def get_aggregates(self, client: RESTClient):
+        return cast(
+            HTTPResponse,
+            client.get_aggs(
+                TICKER, MULTIPLIER, TIMESPAN, FROM_DATE, TO_DATE, raw=False
+            ),
+        )
 
-def load_data_to_json_file(file_path: str):
-    client = RESTClient(api_key=polygon_api_key)
+    def get_exchanges(self, api_url: str):
+        response = requests.get(api_url)
+        return response.json()
 
-    aggs = get_aggregates(client)
+    def load_data_to_json_file(self, FILE_PATH: str):
+        api_url = POLYGON_API_URL
 
-    serialized = json.dumps(aggs, indent=4, cls=CustomJSONEncoder)
-    print(serialized)
+        aggs_data = self.get_aggregates(client)
+        exchanges_data = self.get_exchanges(api_url)
 
-    with open(file_path, 'w') as f:
-        f.write(serialized)
-        print(f'Data successfully written to {file_path}')
+        if FILE_PATH == AGG_FILE_PATH:
+            aggregates_serialized = json.dumps(
+                aggs_data, indent=4, cls=CustomJSONEncoder
+            )
+
+            with open(AGG_FILE_PATH, 'w') as f:
+                f.write(aggregates_serialized)
+                print(f'Data successfully written to {AGG_FILE_PATH}')
+
+        exchanges_serialized = json.dumps(exchanges_data, indent=4)
+
+        with open(EXCH_FILE_PATH, 'w') as f:
+            f.write(exchanges_serialized)
+            print(f'Data successfully written to {EXCH_FILE_PATH}')

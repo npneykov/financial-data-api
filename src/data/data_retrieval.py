@@ -6,19 +6,21 @@ from polygon import RESTClient
 from polygon.rest import models
 from urllib3 import HTTPResponse
 
-from src.data.settings import (
+from src.data.constants import (
     AGG_FILE_PATH,
     EXCH_FILE_PATH,
+    FINA_FILE_PATH,
     FROM_DATE,
     MULTIPLIER,
+    POLYGON_API_EXCHANGES_URL,
+    POLYGON_API_FINANCIALS_URL,
     POLYGON_API_KEY,
-    POLYGON_API_URL,
     TICKER,
     TIMESPAN,
     TO_DATE,
 )
 
-client = RESTClient(api_key=POLYGON_API_KEY, trace=True)
+CLIENT = RESTClient(api_key=POLYGON_API_KEY, trace=True)
 
 
 class CustomJSONEncoder(json.JSONEncoder):
@@ -26,7 +28,7 @@ class CustomJSONEncoder(json.JSONEncoder):
         return {TICKER.format(o.__class__.__name__): o.__dict__}
 
 
-class GetData:
+class DataRetrieval:
     def __init__(self):
         pass
 
@@ -38,17 +40,16 @@ class GetData:
             ),
         )
 
-    def get_exchanges(self, api_url: str):
+    def get_response(self, api_url: str):
         response = requests.get(api_url)
         return response.json()
 
-    def load_data_to_json_file(self, FILE_PATH: str):
-        api_url = POLYGON_API_URL
+    def load_data_to_json_file(self, file_path: str):
+        aggs_data = self.get_aggregates(CLIENT)
+        exchanges_data = self.get_response(POLYGON_API_EXCHANGES_URL)
+        financials_data = self.get_response(POLYGON_API_FINANCIALS_URL)
 
-        aggs_data = self.get_aggregates(client)
-        exchanges_data = self.get_exchanges(api_url)
-
-        if FILE_PATH == AGG_FILE_PATH:
+        if file_path == AGG_FILE_PATH:
             aggregates_serialized = json.dumps(
                 aggs_data, indent=4, cls=CustomJSONEncoder
             )
@@ -57,8 +58,15 @@ class GetData:
                 f.write(aggregates_serialized)
                 print(f'Data successfully written to {AGG_FILE_PATH}')
 
-        exchanges_serialized = json.dumps(exchanges_data, indent=4)
+        elif file_path == EXCH_FILE_PATH:
+            exchanges_serialized = json.dumps(exchanges_data, indent=4)
 
-        with open(EXCH_FILE_PATH, 'w') as f:
-            f.write(exchanges_serialized)
-            print(f'Data successfully written to {EXCH_FILE_PATH}')
+            with open(EXCH_FILE_PATH, 'w') as f:
+                f.write(exchanges_serialized)
+                print(f'Data successfully written to {EXCH_FILE_PATH}')
+
+        financials_serialized = json.dumps(financials_data, indent=4)
+
+        with open(FINA_FILE_PATH, 'w') as f:
+            f.write(financials_serialized)
+            print(f'Data successfully written to {FINA_FILE_PATH}')

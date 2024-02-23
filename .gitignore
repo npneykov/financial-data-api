@@ -164,4 +164,3 @@ cython_debug/
 
 # Other project files
 /src/data/constants.py
-__main__.py

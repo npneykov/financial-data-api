@@ -9,6 +9,7 @@ from urllib3 import HTTPResponse
 from src.data.constants import (
     AGG_FILE_PATH,
     EXCH_FILE_PATH,
+    FILE_PATHS,
     FINA_FILE_PATH,
     FROM_DATE,
     MULTIPLIER,
@@ -32,41 +33,34 @@ class DataRetrieval:
     def __init__(self):
         pass
 
-    def get_aggregates(self, client: RESTClient):
-        return cast(
-            HTTPResponse,
-            client.get_aggs(
-                TICKER, MULTIPLIER, TIMESPAN, FROM_DATE, TO_DATE, raw=False
-            ),
-        )
-
     def get_response(self, api_url: str):
-        response = requests.get(api_url)
-        return response.json()
+        return requests.get(api_url).json()
 
-    def load_data_to_json_file(self, file_path: str):
-        aggs_data = self.get_aggregates(CLIENT)
-        exchanges_data = self.get_response(POLYGON_API_EXCHANGES_URL)
-        financials_data = self.get_response(POLYGON_API_FINANCIALS_URL)
-
-        if file_path == AGG_FILE_PATH:
-            aggregates_serialized = json.dumps(
-                aggs_data, indent=4, cls=CustomJSONEncoder
-            )
-
-            with open(AGG_FILE_PATH, 'w') as f:
-                f.write(aggregates_serialized)
-                print(f'Data successfully written to {AGG_FILE_PATH}')
-
-        elif file_path == EXCH_FILE_PATH:
-            exchanges_serialized = json.dumps(exchanges_data, indent=4)
-
-            with open(EXCH_FILE_PATH, 'w') as f:
-                f.write(exchanges_serialized)
-                print(f'Data successfully written to {EXCH_FILE_PATH}')
-
-        financials_serialized = json.dumps(financials_data, indent=4)
-
-        with open(FINA_FILE_PATH, 'w') as f:
-            f.write(financials_serialized)
-            print(f'Data successfully written to {FINA_FILE_PATH}')
+    def write_data_to_json_file(self):
+        for file_path in FILE_PATHS:
+            if file_path == AGG_FILE_PATH:
+                aggs_data = cast(
+                    HTTPResponse,
+                    CLIENT.get_aggs(
+                        TICKER, MULTIPLIER, TIMESPAN, FROM_DATE, TO_DATE, raw=False
+                    ),
+                )
+                with open(file_path, 'w') as f:
+                    f.write(json.dumps(aggs_data, indent=4, cls=CustomJSONEncoder))
+                    print(f'Data successfully written to {file_path}')
+            elif file_path == EXCH_FILE_PATH:
+                with open(file_path, 'w') as f:
+                    f.write(
+                        json.dumps(
+                            self.get_response(POLYGON_API_EXCHANGES_URL), indent=4
+                        )
+                    )
+                    print(f'Data successfully written to {file_path}')
+            elif file_path == FINA_FILE_PATH:
+                with open(file_path, 'w') as f:
+                    f.write(
+                        json.dumps(
+                            self.get_response(POLYGON_API_FINANCIALS_URL), indent=4
+                        )
+                    )
+                    print(f'Data successfully written to {file_path}')

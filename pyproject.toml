@@ -72,6 +72,11 @@ dummy-variable-rgx = "^(_+|(_+[a-zA-Z0-9_]*[a-zA-Z0-9]+?))$"
 # Use single quotes for strings.
 quote-style = "single"
 
+# Use additional configurations for pytest
+[tool.pytest.ini_options]
+addopts = ["--import-mode=importlib", "-p no:warnings"]
+verbose = 2
+
 # Like Black, indent with spaces, rather than tabs.
 indent-style = "space"
 

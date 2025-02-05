@@ -1,3 +1,5 @@
+import logging
+
 import requests
 from polygon import RESTClient
 
@@ -12,19 +14,28 @@ class DataRetrieval:
         pass
 
     def get_response(self, api_url):
-        data = requests.get(api_url).json()
+        try:
+            data = requests.get(api_url).json()
+        except requests.exceptions.RequestException as e:
+            logging.error(f'Error fetching data: {e}')
+            raise
 
-        financial_data = FinancialData(
-            id=data['id'],
-            start_date=data['start_date'],
-            end_date=data['end_date'],
-            timeframe=data['timeframe'],
-            fiscal_period=data['fiscal_period'],
-            fiscal_year=data['fiscal_year'],
-            cik=data['cik'],
-            sic=data['sic'],
-            tickers=data['tickers'],
-            company_name=data['company_name'],
-        )
+        try:
+            financial_data = FinancialData(
+                id=data['id'],
+                start_date=data['start_date'],
+                end_date=data['end_date'],
+                timeframe=data['timeframe'],
+                fiscal_period=data['fiscal_period'],
+                fiscal_year=data['fiscal_year'],
+                cik=data['cik'],
+                sic=data['sic'],
+                tickers=data['tickers'],
+                company_name=data['company_name'],
+            )
+
+        except KeyError as e:
+            logging.error(f'Error parsing data: {e}')
+            raise
 
         return financial_data

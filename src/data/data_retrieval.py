@@ -6,12 +6,21 @@ from polygon import RESTClient
 from src.data.constants import POLYGON_API_KEY
 from src.data.data_structure import FinancialData
 
-CLIENT = RESTClient(api_key=POLYGON_API_KEY, trace=True)
+polygon = RESTClient(api_key=POLYGON_API_KEY, trace=True)
+data_sources = {'polygon': polygon}
 
 
 class DataRetrieval:
-    def __init__(self):
-        pass
+    def __init__(self, api_key, data_sources):
+        self.api_key = api_key
+        self.data_sources = data_sources
+
+    def get_data(self, symbol, data_source):
+        if data_source in self.data_sources:
+            url = self.data_sources[data_source].format(symbol, self.api_key)
+            return requests.get(url).json()
+        else:
+            raise ValueError('Invalid data source')
 
     def get_response(self, api_url):
         try:

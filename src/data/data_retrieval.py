@@ -3,10 +3,11 @@ import logging
 import requests
 from polygon import RESTClient
 
-from src.data.constants import POLYGON_API_KEY
+from src.data.constants import POLYGON_API_KEY, TICKER
 from src.data.data_structure import FinancialData
 
-polygon = RESTClient(api_key=POLYGON_API_KEY, trace=True)
+api_key = {'X-Polygon-API-Key': POLYGON_API_KEY}
+polygon = RESTClient(api_key['X-Polygon-API-Key'], trace=True)
 data_sources = {'polygon': polygon}
 
 
@@ -15,7 +16,7 @@ class DataRetrieval:
         self.api_key = api_key
         self.data_sources = data_sources
 
-    def get_data(self, symbol, data_source):
+    def get_data(self, data_source, symbol=TICKER):
         if data_source in self.data_sources:
             url = self.data_sources[data_source].format(symbol, self.api_key)
             return requests.get(url).json()

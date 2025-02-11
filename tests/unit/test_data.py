@@ -29,6 +29,10 @@ def data_retrieval(request):
 
 
 class TestDataRetrieval:
+    def test_data_retrieval_init(data_retrieval):
+        assert data_retrieval.api_key == 'X-Polygon-API-Key'
+        assert data_retrieval.data_sources == 'polygon'
+
     def test_get_data_valid_api_key_and_symbol(data_retrieval):
         symbol = 'AAPL'
         data = data_retrieval.get_data(symbol, data_retrieval.data_sources)
@@ -48,6 +52,10 @@ class TestDataRetrieval:
         symbol = 'AAPL'
         with pytest.raises(ValueError):
             data_retrieval.get_data('unsupported_data_source', symbol)
+
+    def test_data_retrieval_api_request_failure(data_retrieval):
+        with pytest.raises(ValueError):
+            data_retrieval.get_data('AAPL', 'polygon')
 
 
 class TestFinancialData:
@@ -76,3 +84,8 @@ class TestFinancialData:
         financial_data.symbol = 'INVALID_SYMBOL'
         with pytest.raises(ValueError):
             financial_data.get_historical_data('2020-01-01', '2020-12-31')
+
+    def test_financial_data_get_historical_data_empty_list(financial_data):
+        historical_data = financial_data.get_historical_data('2020-01-01', '2020-12-31')
+        assert isinstance(historical_data, list)
+        assert len(historical_data) == 0

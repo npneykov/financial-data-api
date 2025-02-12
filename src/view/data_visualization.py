@@ -3,7 +3,6 @@ import seaborn as sns
 from matplotlib import pyplot as plt
 
 from src.data.constants import (
-    AGG_FILE_PATH,
     DATA_FILE_PATH,
     EXCH_FILE_PATH,
     FINA_FILE_PATH,

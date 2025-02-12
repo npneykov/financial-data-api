@@ -1,7 +1,9 @@
 import pytest
 
+from src.data.constants import DATA_FILE_PATH
 from src.data.data_retrieval import DataRetrieval
 from src.data.data_structure import FinancialData
+from src.view.data_visualization import DataVisualization
 
 
 @pytest.fixture(
@@ -26,6 +28,11 @@ def financial_data(request):
 def data_retrieval(request):
     api_key, data_sources = request.param
     return DataRetrieval(api_key, data_sources)
+
+
+@pytest.fixture
+def data_visualization():
+    return DataVisualization
 
 
 class TestDataRetrieval:
@@ -89,3 +96,17 @@ class TestFinancialData:
         historical_data = financial_data.get_historical_data('2020-01-01', '2020-12-31')
         assert isinstance(historical_data, list)
         assert len(historical_data) == 0
+
+
+class TestDataVisualization:
+    def test_data_visualization_init(data_visualization):
+        assert isinstance(data_visualization, DataVisualization)
+
+    def test_data_visualization_plot_data_invalid_file_path(data_visualization):
+        with pytest.raises(ValueError):
+            data_visualization.plot_data('invalid_file_path')
+
+    def test_data_visualization_plot_data_valid_file_path(data_visualization):
+        assert data_visualization.plot_data(
+            DATA_FILE_PATH
+        ) == data_visualization.plot_data('src/data/json/data.json')

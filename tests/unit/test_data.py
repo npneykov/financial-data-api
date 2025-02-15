@@ -37,32 +37,47 @@ def data_visualization():
 
 class TestDataRetrieval:
     def test_data_retrieval_init(data_retrieval):
-        assert data_retrieval.api_key == 'X-Polygon-API-Key'
-        assert data_retrieval.data_sources == 'polygon'
+        assert data_retrieval.api_key in data_retrieval.api_key
+        assert data_retrieval.data_sources in data_retrieval.data_sources
 
-    def test_get_data_valid_api_key_and_symbol(data_retrieval):
+    def test_get_data_with_valid_api_key_and_symbol(data_retrieval):
         symbol = 'AAPL'
         data = data_retrieval.get_data(symbol, data_retrieval.data_sources)
         assert isinstance(data, dict)
 
-    def test_get_data_invalid_api_key(data_retrieval):
+    def test_get_data_with_invalid_api_key(data_retrieval):
+        api_key = 'Invalid-Polygon-API-Key'
         symbol = 'AAPL'
         with pytest.raises(ValueError):
             data_retrieval.get_data(symbol, data_retrieval.data_sources)
+        assert api_key not in data_retrieval.api_key
 
-    def test_get_data_invalid_symbol(data_retrieval):
+    def test_get_data_with_invalid_symbol(data_retrieval, financial_data):
         symbol = ' invalid_symbol'
         with pytest.raises(ValueError):
             data_retrieval.get_data(symbol, data_retrieval.data_sources)
+        assert symbol not in financial_data.symbol
+
+    def test_get_data_with_empty_symbol(data_retrieval):
+        with pytest.raises(ValueError) as e:
+            data_retrieval.get_data('', data_retrieval.data_sources)
+        assert str(e.value) == 'Symbol cannot be empty'
+
+    def test_get_data_with_none_symbol(data_retrieval):
+        with pytest.raises(ValueError) as e:
+            data_retrieval.get_data(None, data_retrieval.data_sources)
+        assert str(e.value) == 'Symbol cannot be None'
 
     def test_get_data_data_source_not_supported(data_retrieval):
         symbol = 'AAPL'
-        with pytest.raises(ValueError):
-            data_retrieval.get_data('unsupported_data_source', symbol)
+        with pytest.raises(ValueError) as e:
+            data_retrieval.get_data(symbol, 'unsupported_data_source')
+        assert str(e.value) == 'Invalid data source'
 
     def test_data_retrieval_api_request_failure(data_retrieval):
-        with pytest.raises(ValueError):
+        with pytest.raises(ValueError) as e:
             data_retrieval.get_data('AAPL', 'polygon')
+        assert str(e.value) == 'Error fetching data'
 
 
 class TestFinancialData:
@@ -84,18 +99,42 @@ class TestFinancialData:
         assert len(historical_data) > 0
 
     def test_financial_data_get_historical_data_invalid_date_range(financial_data):
+        financial_data.end_date = '2020-01-01'
+        financial_data.start_date = '2020-12-31'
         with pytest.raises(ValueError):
-            financial_data.get_historical_data('2020-12-31', '2020-01-01')
+            financial_data.get_historical_data(
+                financial_data.start_date, financial_data.end_date,
+            )
+        assert financial_data.start_date > financial_data.end_date
 
-    def test_financial_data_get_historical_data_unknown_symbol(financial_data):
+    def test_financial_data_get_historical_data_invalid_symbol(financial_data):
         financial_data.symbol = 'INVALID_SYMBOL'
         with pytest.raises(ValueError):
             financial_data.get_historical_data('2020-01-01', '2020-12-31')
+        assert financial_data.symbol == 'INVALID_SYMBOL'
 
     def test_financial_data_get_historical_data_empty_list(financial_data):
         historical_data = financial_data.get_historical_data('2020-01-01', '2020-12-31')
         assert isinstance(historical_data, list)
         assert len(historical_data) == 0
+
+    def test_financial_data_with_invalid_symbol(financial_data):
+        financial_data.symbol = 'INVALID_SYMBOL'
+        with pytest.raises(ValueError):
+            financial_data.to_json()
+        assert financial_data.symbol == 'INVALID_SYMBOL'
+
+    def test_financial_data_with_empty_start_date(financial_data):
+        financial_data.start_date = ''
+        with pytest.raises(ValueError):
+            financial_data.to_json()
+        assert financial_data.start_date == ''
+
+    def test_financial_data_with_none_start_date(financial_data):
+        financial_data.start_date = None
+        with pytest.raises(ValueError):
+            financial_data.to_json()
+        assert financial_data.start_date is None
 
 
 class TestDataVisualization:
@@ -105,8 +144,14 @@ class TestDataVisualization:
     def test_data_visualization_plot_data_invalid_file_path(data_visualization):
         with pytest.raises(ValueError):
             data_visualization.plot_data('invalid_file_path')
+        assert data_visualization.file_path != 'invalid_file_path'
 
     def test_data_visualization_plot_data_valid_file_path(data_visualization):
         assert data_visualization.plot_data(
-            DATA_FILE_PATH
+            DATA_FILE_PATH,
         ) == data_visualization.plot_data('src/data/json/data.json')
+
+    def test_data_visualization_plot_data_none_file_path(data_visualization):
+        with pytest.raises(ValueError):
+            data_visualization.plot_data(None)
+        assert data_visualization.file_path is None

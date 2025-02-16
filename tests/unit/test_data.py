@@ -1,3 +1,5 @@
+from datetime import datetime, timedelta
+
 import pytest
 
 from src.data.constants import DATA_FILE_PATH
@@ -79,6 +81,21 @@ class TestDataRetrieval:
             data_retrieval.get_data('AAPL', 'polygon')
         assert str(e.value) == 'Error fetching data'
 
+    def test_data_retrieval_api_rate_limit(data_retrieval):
+        with pytest.raises(ValueError) as e:
+            data_retrieval.get_data('AAPL', 'polygon')
+        assert 'Rate limit exceeded' in str(e.value)
+
+    def test_data_retrieval_large_datasets(data_retrieval):
+        data = data_retrieval.get_data('AAPL', 'polygon')
+        assert isinstance(data, dict)
+        assert len(data) > 1000
+
+    def test_data_retrieval_timeout_handling(data_retrieval, mocker):
+        mocker.patch('requests.get', side_effect=TimeoutError)
+        with pytest.raises(TimeoutError):
+            data_retrieval.get_data('AAPL', 'polygon')
+
 
 class TestFinancialData:
     def test_financial_data_init(financial_data):
@@ -103,7 +120,8 @@ class TestFinancialData:
         financial_data.start_date = '2020-12-31'
         with pytest.raises(ValueError):
             financial_data.get_historical_data(
-                financial_data.start_date, financial_data.end_date,
+                financial_data.start_date,
+                financial_data.end_date,
             )
         assert financial_data.start_date > financial_data.end_date
 
@@ -136,6 +154,19 @@ class TestFinancialData:
             financial_data.to_json()
         assert financial_data.start_date is None
 
+    def test_financial_data_with_different_date_formats(financial_data):
+        financial_data.start_date = '2020-01-01T00:00:00Z'
+        financial_data.end_date = '2020-12-31T23:59:59Z'
+        json_data = financial_data.to_json()
+        assert '2020-01-01T00:00:00Z' in json_data
+
+    def test_financial_data_future_date_request(financial_data):
+        future_date = datetime.now() + timedelta(days=1)
+        with pytest.raises(ValueError):
+            financial_data.test_financial_data_get_historical_data(
+                '2020-01-01', future_date,
+            )
+
 
 class TestDataVisualization:
     def test_data_visualization_init(data_visualization):
@@ -155,3 +186,5 @@ class TestDataVisualization:
         with pytest.raises(ValueError):
             data_visualization.plot_data(None)
         assert data_visualization.file_path is None
+
+    # TODO: Add more test cases for the data visualization class
